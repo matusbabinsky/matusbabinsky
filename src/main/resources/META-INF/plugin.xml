@@ -58,5 +58,6 @@
         <!-- Add your actions here -->
     </actions>
 
+    <depends>com.intellij.modules.java</depends>
 
 </idea-plugin>
