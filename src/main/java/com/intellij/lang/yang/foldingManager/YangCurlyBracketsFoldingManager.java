@@ -9,54 +9,58 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.util.TextRange;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class YangFoldingManager extends FoldingBuilderEx implements DumbAware {
+public class YangCurlyBracketsFoldingManager extends FoldingBuilderEx implements DumbAware {
 
+    @NotNull
     @Override
-    public FoldingDescriptor @NotNull [] buildFoldRegions(@NotNull PsiElement root, @NotNull Document document, boolean quick) {
+    public FoldingDescriptor[] buildFoldRegions(@NotNull final PsiElement root, @NotNull final Document document, final boolean quick) {
         // Initialize the list of folding regions
-        List<FoldingDescriptor> descriptors = new ArrayList<>();
+        final List<FoldingDescriptor> descriptors = new ArrayList<>();
         // Get a collection of the literal expressions in the document below root
-        var allElementsInFile =
+        final var allElementsInFile =
                 new ArrayList<>(PsiTreeUtil.findChildrenOfType(root, ASTWrapperPsiElement.class));
         allElementsInFile.stream()
                 .filter(this::endsWithRightBrace)
-                .forEach(e -> addElementToDescriptors(descriptors, e));
+                .forEach(e -> this.addElementToDescriptors(descriptors, e));
         return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
     }
 
+    @Nullable
     @Override
-    public @Nullable String getPlaceholderText(@NotNull ASTNode astNode) {
+    public String getPlaceholderText(@NotNull final ASTNode astNode) {
         return "{ ... }";
     }
 
     @Override
-    public boolean isCollapsedByDefault(@NotNull ASTNode astNode) {
+    public boolean isCollapsedByDefault(@NotNull final ASTNode astNode) {
         return false;
     }
 
-    private boolean endsWithRightBrace(ASTWrapperPsiElement element) {
+    private boolean endsWithRightBrace(final ASTWrapperPsiElement element) {
         return element.getNode().getLastChildNode() != null &&
                 element.getNode().getLastChildNode().getElementType()
                         .equals(YangTypes.YANG_RIGHT_BRACE);
     }
 
-    private void addElementToDescriptors(List<FoldingDescriptor> descriptors, ASTWrapperPsiElement element) {
+    public void addElementToDescriptors(final List<FoldingDescriptor> descriptors, final ASTWrapperPsiElement element) {
+        // error in element (ends with YANG_RIGHT_BRACE but does not include YANG_LEFT_BRACE
+        if (element == null) return;
         descriptors.add(new FoldingDescriptor(element.getNode(),
-                new TextRange(getLeftBracesElement(element)
+                new TextRange(this.getLeftBracesElement(element)
                         .getTextOffset(),
                         element.getTextRange().getEndOffset()),
-                FoldingGroup.newGroup("{}")));
+                FoldingGroup.newGroup("desc")));
     }
 
-    @NotNull
-    private PsiElement getLeftBracesElement(ASTWrapperPsiElement element) {
+    private PsiElement getLeftBracesElement(final ASTWrapperPsiElement element) {
         var child = element.getFirstChild();
         while (child != null) {
             if (child.getNode().getElementType().equals(YangTypes.YANG_LEFT_BRACE)) {

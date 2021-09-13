@@ -44,7 +44,10 @@
         <lang.syntaxHighlighterFactory key="Yang" implementationClass="com.intellij.lang.yang.editor.YangSyntaxHighlighterFactory"/>
         <colorSettingsPage implementation="com.intellij.lang.yang.editor.YangColorSettingsPage"/>
         <completion.contributor language="Yang" implementationClass="com.intellij.lang.yang.YangCompletionContributor"/>
-        <lang.foldingBuilder language="Yang" implementationClass="com.intellij.lang.yang.foldingManager.YangFoldingManager"/>
+        <lang.foldingBuilder language="Yang"
+                             implementationClass="com.intellij.lang.yang.foldingManager.YangCurlyBracketsFoldingManager"/>
+        <lang.foldingBuilder language="Yang"
+                             implementationClass="com.intellij.lang.yang.foldingManager.YangDescriptionFoldingManager"/>
     </extensions>
 
     <application-components>
