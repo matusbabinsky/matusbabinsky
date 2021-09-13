@@ -10,6 +10,7 @@ import com.intellij.openapi.editor.FoldingGroup;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.impl.source.tree.PsiErrorElementImpl;
 import com.intellij.psi.util.PsiTreeUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -19,18 +20,27 @@ import java.util.List;
 
 public class YangDescriptionFoldingManager extends FoldingBuilderEx implements DumbAware {
 
+    private FoldingDescriptor[] descriptors = null;
+
+    public YangDescriptionFoldingManager() {
+        this.descriptors = new FoldingDescriptor[0];
+    }
 
     @NotNull
     @Override
     public FoldingDescriptor[] buildFoldRegions(@NotNull final PsiElement root, @NotNull final Document document, final boolean b) {
-        // Initialize the list of folding regions
-        final List<FoldingDescriptor> descriptors = new ArrayList<>();
-        // Get a collection of the all Description elements in the document below root
-        final var allElementsInFile =
-                new ArrayList<>(PsiTreeUtil.findChildrenOfType(root, YangDescriptionStmtImpl.class));
-        allElementsInFile.stream()
-                .forEach(e -> this.addElementToDescriptors(descriptors, e));
-        return descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
+        if (YangFoldingManagerUtil.isFileValid(root)) {
+            // Initialize the list of folding regions
+            final List<FoldingDescriptor> descriptors = new ArrayList<>();
+            // Get a collection of the all Description elements in the document below root
+            final var allElementsInFile =
+                    new ArrayList<>(PsiTreeUtil.findChildrenOfType(root, YangDescriptionStmtImpl.class));
+            allElementsInFile.stream()
+                    .forEach(e -> this.addElementToDescriptors(descriptors, e));
+            this.descriptors = descriptors.toArray(new FoldingDescriptor[descriptors.size()]);
+            return this.descriptors;
+        }
+        return this.descriptors;
     }
 
     @Override
@@ -45,7 +55,7 @@ public class YangDescriptionFoldingManager extends FoldingBuilderEx implements D
     }
 
     public void addElementToDescriptors(final List<FoldingDescriptor> descriptors, final ASTWrapperPsiElement element) {
-        descriptors.add(new FoldingDescriptor(element.getNode(),
+        descriptors.add(new FoldingDescriptor(element.getNode().getFirstChildNode(),
                 new TextRange(element
                         .getTextOffset() + element.getNode().getFirstChildNode().getText().length(),
                         element.getTextRange().getEndOffset() - 1),
